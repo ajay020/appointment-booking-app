@@ -1,40 +1,67 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
+import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from './token';
+
+const BASE_URL = 'http://192.168.205.37:5000/api'
 
 // Create an axios instance
 const api = axios.create({
-    baseURL: 'http://192.168.205.37:5000/api',
+    baseURL: BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
     timeout: 10000, // 10s timeout
 });
 
-// Add request interceptor (e.g., to inject auth token)
-api.interceptors.request.use(
-    async (config) => {
-        // If you have token stored in SecureStore or context, inject it here
-        const token = await AsyncStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
+// Attach token to every request
+api.interceptors.request.use(async (config) => {
+    const accessToken = await getAccessToken();
+    if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
+});
 
-// Add response interceptor for global error handling
+
+// Refresh token on 401
 api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response) {
-            // Server responded with a status outside 2xx
-            console.error('API Error:', error.response.data);
-        } else if (error.request) {
-            console.error('No response from server');
-        } else {
-            console.error('Request setup error', error.message);
+    response => response,
+    async (error) => {
+        const originalRequest = error.config;
+        console.log('API Error:', error.config);
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                const refreshToken = await getRefreshToken();
+                if (!refreshToken) {
+                    console.error('No refresh token available');
+                    await clearTokens();
+                    // Optional: navigate to login
+                    return Promise.reject(error);
+                }
+                const res = await axios.post(BASE_URL + '/auth/refresh-token', {
+                    refreshToken,
+                });
+
+                const { accessToken, refreshToken: newRefreshToken } = res.data;
+
+                await saveTokens(accessToken, newRefreshToken);
+                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+                // Retry the original request with new tokens
+                console.log('Token refreshed successfully');
+                return api(originalRequest);
+            } catch (err) {
+                useAuth().logout();
+                // Optional: navigate to login
+                console.error('Token refresh failed, clearing tokens', err);
+
+                return Promise.reject(err);
+            }
         }
+
         return Promise.reject(error);
     }
 );

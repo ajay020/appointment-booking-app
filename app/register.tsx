@@ -35,8 +35,10 @@ export default function RegisterScreen() {
                 email,
                 password,
             });
+            const data = await res.data;
+            console.log('Registration response:', data);
 
-            login(res.data.token, res.data.user); // store data in context + secure storage
+            await login(data.accessToken, data.refreshToken, data.user);// store data in context + secure storage
             router.replace('/');     // redirect to home
         } catch (err: any) {
             Alert.alert('Registration Error', err.message);

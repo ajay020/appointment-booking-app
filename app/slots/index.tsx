@@ -1,6 +1,8 @@
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/apiClient';
-import React, { useEffect, useState } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useNavigation, useRouter } from 'expo-router';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -21,11 +23,14 @@ type Slot = {
 };
 
 export default function SlotsScreen() {
-    const { token } = useAuth();
+    const { accessToken, isAdmin } = useAuth();
     const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
     const [slots, setSlots] = useState<Slot[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const navigation = useNavigation();
+    const router = useRouter();
 
     // Format today's date as YYYY-MM-DD
     function getTodayDate() {
@@ -44,11 +49,7 @@ export default function SlotsScreen() {
         setError(null);
 
         try {
-            const res = await api.get(`/slots?date=${date}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const res = await api.get(`/slots?date=${date}`);
             setSlots(res.data.slots); // Adjust based on your API response
         } catch (err: any) {
             console.error(err);
@@ -62,18 +63,31 @@ export default function SlotsScreen() {
         fetchSlots(selectedDate);
     }, [selectedDate]);
 
+    useLayoutEffect(() => {
+        if (!isAdmin) {
+            navigation.setOptions({
+                headerRight: null, // Hide the add button for non-admin users
+            });
+            return;
+        }
+
+        // Show add button only for admin users
+        navigation.setOptions({
+            headerRight: () => (
+                <Ionicons
+                    name="add-circle-outline"
+                    size={32}
+                    onPress={() => router.push('/slots/create')}
+                />
+
+            )
+        });
+    }, [navigation]);
+
     const bookSlot = async (slotId: string) => {
         setLoading(true);
         try {
-            const res = await api.post(
-                `/bookings/${slotId}`,
-                {},
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+            const res = await api.post(`/bookings/${slotId}`);
 
             Alert.alert('Success', 'Slot booked successfully!');
             fetchSlots(selectedDate); // refresh
