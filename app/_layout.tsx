@@ -8,9 +8,11 @@ export default function Layout() {
         <AuthProvider>
             <SafeAreaView style={{ flex: 1 }}>
                 <View style={styles.container}>
-                    <Stack  >
+                    <Stack >
                         <Stack.Screen name="login" options={{ title: 'Login', headerShown: false }} />
                         <Stack.Screen name="register" options={{ title: 'Register', headerShown: false }} />
+                        <Stack.Screen name="slots/index" options={{ title: 'Available Slots' }} />
+                        <Stack.Screen name="slots/create" options={{ title: 'Create Slot' }} />
                     </Stack>
                 </View>
             </SafeAreaView>

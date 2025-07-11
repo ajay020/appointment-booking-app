@@ -36,7 +36,7 @@ export default function RegisterScreen() {
                 password,
             });
 
-            login(res.data.token); // store token in context + secure storage
+            login(res.data.token, res.data.user); // store data in context + secure storage
             router.replace('/');     // redirect to home
         } catch (err: any) {
             Alert.alert('Registration Error', err.message);

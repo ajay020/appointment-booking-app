@@ -40,7 +40,7 @@ export default function LoginScreen() {
             const data = await res.data;
             console.log('Login response:', data);
 
-            login(data.token);  // save token in context + storage
+            login(data.token, data.user);  // save token and user in context + storage
             router.replace('/'); // navigate to home
         } catch (err: any) {
             Alert.alert('Login Error', err.message);

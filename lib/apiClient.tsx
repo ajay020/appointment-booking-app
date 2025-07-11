@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-// ✅ Create an axios instance
+// Create an axios instance
 const api = axios.create({
     baseURL: 'http://192.168.205.37:5000/api',
     headers: {
@@ -10,12 +10,10 @@ const api = axios.create({
     timeout: 10000, // 10s timeout
 });
 
-// ✅ Optional: Add request interceptor (e.g., to inject auth token)
+// Add request interceptor (e.g., to inject auth token)
 api.interceptors.request.use(
     async (config) => {
         // If you have token stored in SecureStore or context, inject it here
-        // const token = await SecureStore.getItemAsync('token');
-        // if (token) config.headers.Authorization = `Bearer ${token}`;
         const token = await AsyncStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -25,7 +23,7 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// ✅ Optional: Add response interceptor for global error handling
+// Add response interceptor for global error handling
 api.interceptors.response.use(
     (response) => response,
     (error) => {
