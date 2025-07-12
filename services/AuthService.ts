@@ -1,3 +1,5 @@
+import { Logger } from "@/utils/logger";
+
 let logoutFn: (() => void) | null = null;
 
 export const AuthService = {
@@ -8,7 +10,7 @@ export const AuthService = {
         if (logoutFn) {
             logoutFn();
         } else {
-            console.warn('Logout function not set');
+            Logger.warn('Logout function not set');
         }
     },
 };

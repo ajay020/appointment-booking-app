@@ -2,6 +2,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import { Stack } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
+
 
 export default function Layout() {
     return (
@@ -14,6 +16,7 @@ export default function Layout() {
                         <Stack.Screen name="slots/index" options={{ title: 'Available Slots' }} />
                         <Stack.Screen name="slots/create" options={{ title: 'Create Slot' }} />
                     </Stack>
+                    <Toast />
                 </View>
             </SafeAreaView>
         </AuthProvider>

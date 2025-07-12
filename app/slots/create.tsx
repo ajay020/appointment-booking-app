@@ -1,30 +1,51 @@
 import api from '@/lib/apiClient';
+import { Logger } from '@/utils/logger';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button, Platform, StyleSheet, Text, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export default function CreateSlotScreen() {
-    const [date, setDate] = useState('');
-    const [time, setTime] = useState('');
+    const [date, setDate] = useState<Date | null>(null);
+    const [time, setTime] = useState<Date | null>(null);
     const [loading, setLoading] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
     const router = useRouter();
 
     const handleCreateSlot = async () => {
         if (!date || !time) {
-            return Alert.alert('Validation Error', 'Date and Time are required');
+            Toast.show({
+                type: 'error',
+                text1: 'Validation Error',
+                text2: 'Date and Time are required',
+            });
+            return;
         }
+
+        const dateStr = date?.toISOString().split('T')[0]; // YYYY-MM-DD
+        const timeStr = time?.toTimeString().split(':').slice(0, 2).join(':'); // HH:MM
+        Logger.log('Creating slot with date:', dateStr, 'and time:', timeStr);
 
         try {
             setLoading(true);
-            const res = await api.post('/slots', { date, time },);
-            console.log("response data", res.data);
+            const res = await api.post('/slots', { date: dateStr, time: timeStr });
+            Logger.log('Slot created:', res.data);
 
-            Alert.alert('Success', 'Slot created successfully!');
-            router.replace('/slots'); // Navigate back to slots list
+            Toast.show({
+                type: 'success',
+                text1: 'Slot created successfully',
+            });
+            router.replace('/slots');
         } catch (err: any) {
-            console.error(err);
-            Alert.alert('Error', err.response?.data?.msg || 'Something went wrong');
+            Logger.error(err);
+            Toast.show({
+                type: 'error',
+                text1: 'Error creating slot',
+                text2: err.response?.data?.msg || 'Something went wrong',
+            });
         } finally {
             setLoading(false);
         }
@@ -34,36 +55,55 @@ export default function CreateSlotScreen() {
         <View style={styles.container}>
             <Text style={styles.title}>Create a New Slot</Text>
 
-            <TextInput
-                style={styles.input}
-                placeholder="Date (YYYY-MM-DD)"
-                value={date}
-                onChangeText={setDate}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Time (HH:MM 24hr format)"
-                value={time}
-                onChangeText={setTime}
-            />
-
+            {/* Date Picker */}
             <Button
-                title={loading ? 'Creating...' : 'Create Slot'}
-                onPress={handleCreateSlot}
-                disabled={loading}
+                title={date ? `📅 ${date.toDateString()}` : 'Select Date'}
+                onPress={() => setShowDatePicker(true)}
             />
+            {showDatePicker && (
+                <DateTimePicker
+                    value={date || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    minimumDate={new Date()}
+                    onChange={(_, selectedDate) => {
+                        setShowDatePicker(false);
+                        Logger.log('Selected date:', selectedDate);
+                        if (selectedDate) setDate(selectedDate);
+                    }}
+                />
+            )}
+
+            {/* Time Picker */}
+            <Button
+                title={time ? `⏰ ${time.toTimeString().slice(0, 5)}` : 'Select Time'}
+                onPress={() => setShowTimePicker(true)}
+            />
+            {showTimePicker && (
+                <DateTimePicker
+                    value={time || new Date()}
+                    mode="time"
+                    is24Hour={true}
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(_, selectedTime) => {
+                        setShowTimePicker(false);
+                        if (selectedTime) setTime(selectedTime);
+                    }}
+                />
+            )}
+
+            <View style={{ marginTop: 16 }}>
+                <Button
+                    title={loading ? 'Creating...' : 'Create Slot'}
+                    onPress={handleCreateSlot} disabled={loading}
+                />
+            </View>
         </View>
     );
 }
 
+
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16 },
-    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 12,
-        marginBottom: 12,
-        borderRadius: 6,
-    },
+    container: { flex: 1, padding: 16, gap: 16 },
+    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
 });

@@ -8,6 +8,7 @@ export async function saveTokens(accessToken: string, refreshToken: string) {
     await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
 }
 
+
 export async function getAccessToken() {
     return await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
 }

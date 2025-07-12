@@ -9,4 +9,7 @@ export const Logger = {
             // TODO: send to Sentry or server
         }
     },
+    warn: (...args: any[]) => {
+        if (__DEV__) console.warn('[WARN]', ...args);
+    },
 };
