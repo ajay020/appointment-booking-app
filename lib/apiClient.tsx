@@ -1,4 +1,5 @@
-import { useAuth } from '@/context/AuthContext';
+import { AuthService } from '@/services/AuthService';
+import { Logger } from '@/utils/logger';
 import axios from 'axios';
 import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from './token';
 
@@ -44,6 +45,7 @@ api.interceptors.response.use(
                 const res = await axios.post(BASE_URL + '/auth/refresh-token', {
                     refreshToken,
                 });
+                console.log('Token refreshed successfully');
 
                 const { accessToken, refreshToken: newRefreshToken } = res.data;
 
@@ -51,13 +53,10 @@ api.interceptors.response.use(
                 originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
                 // Retry the original request with new tokens
-                console.log('Token refreshed successfully');
                 return api(originalRequest);
             } catch (err) {
-                useAuth().logout();
-                // Optional: navigate to login
-                console.error('Token refresh failed, clearing tokens', err);
-
+                AuthService.logout(); // Clear tokens and logout user
+                Logger.error('Token refresh failed', err);
                 return Promise.reject(err);
             }
         }

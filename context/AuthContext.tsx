@@ -1,4 +1,5 @@
 import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from '@/lib/token';
+import { AuthService } from '@/services/AuthService';
 import * as SecureStore from 'expo-secure-store';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -72,6 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
     };
 
+    useEffect(() => {
+        // Set logout function in AuthService
+        AuthService.setLogout(logout)
+    })
+
     return (
         <AuthContext.Provider value={{ accessToken, refreshToken, user, isAdmin, isAuthenticated, login, logout }}>
             {children}
@@ -81,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
     const context = useContext(AuthContext);
-    
+
     if (!context) throw new Error('useAuth must be used within AuthProvider');
     return context;
 }
