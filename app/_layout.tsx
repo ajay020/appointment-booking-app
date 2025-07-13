@@ -1,33 +1,52 @@
-import { AuthProvider } from '@/context/AuthContext';
-import { Stack } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { Logger } from '@/utils/logger';
+import { SplashScreen, Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { SafeAreaView } from 'react-native';
 import Toast from 'react-native-toast-message';
 
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
 
-export default function Layout() {
+function RootLayoutContent() {
+    const { isAuthenticated, isLoadingAuth } = useAuth();
+
+    Logger.log('Rootlayout content render', isAuthenticated, isLoadingAuth);
+
+    useEffect(() => {
+        if (!isLoadingAuth) {
+            SplashScreen.hideAsync();
+        }
+    }, [isLoadingAuth, isAuthenticated]);
+
+    // If we are still loading authentication status, don't render anything yet
+    // or render a simple loading indicator
+    if (isLoadingAuth) {
+        return null; // Or <LoadingScreen /> if you have one
+    }
+
+    return (
+        <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
+        </Stack>
+    );
+}
+
+
+export default function RootLayout() {
     return (
         <AuthProvider>
             <SafeAreaView style={{ flex: 1 }}>
-                <View style={styles.container}>
-                    <Stack >
-                        <Stack.Screen name="login" options={{ title: 'Login', headerShown: false }} />
-                        <Stack.Screen name="register" options={{ title: 'Register', headerShown: false }} />
-                        <Stack.Screen name="slots/index" options={{ title: 'Available Slots' }} />
-                        <Stack.Screen name="slots/create" options={{ title: 'Create Slot' }} />
-                    </Stack>
-                    <Toast />
-                </View>
+                <RootLayoutContent />
             </SafeAreaView>
+            <Toast visibilityTime={2000} />
         </AuthProvider>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-});
+
 
 

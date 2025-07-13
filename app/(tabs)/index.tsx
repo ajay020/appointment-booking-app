@@ -1,19 +1,10 @@
 import { useAuth } from "@/context/AuthContext";
 import { Stack, useRouter } from "expo-router";
-import { useEffect } from "react";
 import { Button, StyleSheet, Text, View } from "react-native";
 
 function Home() {
-    const { isAuthenticated, logout, user } = useAuth();
+    const { logout, user } = useAuth();
     const router = useRouter();
-
-    useEffect(() => {
-        if (!isAuthenticated) {
-            router.replace("/login");
-        }
-    }, [isAuthenticated]);
-
-    if (!isAuthenticated) return null;
 
     return (
         <View style={styles.container}>
@@ -43,7 +34,7 @@ function Home() {
                     title="Logout"
                     onPress={async () => {
                         logout();
-                        router.replace("/login");
+                        // router.replace("/login");
                     }}
                 />
             </View>

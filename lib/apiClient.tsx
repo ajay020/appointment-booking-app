@@ -3,7 +3,7 @@ import { Logger } from '@/utils/logger';
 import axios from 'axios';
 import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from './token';
 
-const BASE_URL = 'http://192.168.205.37:5000/api'
+const BASE_URL = 'http://192.168.100.37:5000/api'
 
 // Create an axios instance
 const api = axios.create({
